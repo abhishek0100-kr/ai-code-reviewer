@@ -1,0 +1,30 @@
+const reviewResponseSchema = {
+  type: "OBJECT",
+  properties: {
+    complexity: {
+      type: "OBJECT",
+      properties: {
+        time: { type: "STRING" },
+        space: { type: "STRING" },
+        explanation: { type: "STRING" }
+      },
+      required: ["time", "space", "explanation"]
+    },
+    issues: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          type: { type: "STRING" },
+          line: { type: "INTEGER" },
+          description: { type: "STRING" },
+          snippet: { type: "STRING" }
+        },
+        required: ["type", "line", "description", "snippet"]
+      }
+    }
+  },
+  required: ["complexity", "issues"]
+};
+
+module.exports = { reviewResponseSchema };

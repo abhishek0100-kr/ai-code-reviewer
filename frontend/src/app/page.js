@@ -3,9 +3,20 @@ import React, { useState } from 'react';
 import { Terminal, Play, Cpu, ShieldAlert, CheckCircle, RefreshCw } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { coldarkDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import CodeEditor from '@uiw/react-textarea-code-editor';
+
+const LANGUAGES = [
+  { id: 'js', label: 'JavaScript' },
+  { id: 'py', label: 'Python' },
+  { id: 'java', label: 'Java' },
+  { id: 'cpp', label: 'C++' },
+  { id: 'c', label: 'C' },
+  { id: 'go', label: 'Go' }
+];
 
 export default function Dashboard() {
-  const [sourceCode, setSourceCode] = useState('// Paste a snippet of JavaScript here to begin analysis...\nfunction processData(arr) {\n  let result = [];\n  for (let i = 0; i < arr.length; i++) {\n    if (arr[i] == "admin") {\n      eval(arr[i]); // Risk exposure\n    }\n  }\n  return result;\n}');
+  const [sourceCode, setSourceCode] = useState('function processData(arr) {\n  let result = [];\n  for (let i = 0; i < arr.length; i++) {\n    if (arr[i] == "admin") {\n      eval(arr[i]);\n    }\n  }\n  return result;\n}');
+  const [language, setLanguage] = useState('js');
   const [analysis, setAnalysis] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -17,7 +28,6 @@ export default function Dashboard() {
     setErrorMessage('');
     setAnalysis(null);
 
-    // Read our backend location from environment keys
     const targetUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     try {
@@ -42,12 +52,10 @@ export default function Dashboard() {
   };
 
   const lineCount = sourceCode.split('\n').length;
-  // Guardrail: Filter out any hallucinated line numbers that exceed the user's snippet length
   const targetIssues = analysis?.issues?.filter(item => item.line <= lineCount) || [];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      {/* Header bar */}
       <header className="border-b border-slate-800 bg-slate-900/50 px-6 py-4 flex items-center justify-between backdrop-blur">
         <div className="flex items-center gap-3">
           <Terminal className="h-6 w-6 text-indigo-400" />
@@ -55,15 +63,25 @@ export default function Dashboard() {
             IntelliCode Static Auditor <span className="text-xs font-semibold px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">v1.0-MVP</span>
           </h1>
         </div>
+        <div className="flex items-center gap-4">
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="bg-slate-900 text-slate-200 text-sm font-medium px-3 py-1.5 rounded-lg border border-slate-800 focus:outline-none focus:border-indigo-500 cursor-pointer transition-all"
+          >
+            {LANGUAGES.map((lang) => (
+              <option key={lang.id} value={lang.id} className="bg-slate-900">
+                {lang.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </header>
 
-      {/* Grid Pane Split */}
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 overflow-hidden">
-        
-        {/* LEFT PANEL: Console Input Window */}
         <div className="flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
           <div className="bg-slate-950/60 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Source Code Console (JavaScript)</span>
+            <span className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Source Code Console</span>
             <button
               onClick={executeReviewPayload}
               disabled={isProcessing}
@@ -73,29 +91,35 @@ export default function Dashboard() {
               {isProcessing ? 'Auditing Script...' : 'Run Diagnostics'}
             </button>
           </div>
-          <textarea
-            value={sourceCode}
-            onChange={(e) => setSourceCode(e.target.value)}
-            className="flex-1 w-full bg-slate-950 p-4 font-mono text-sm text-indigo-300 focus:outline-none resize-none border-none leading-relaxed"
-            disabled={isProcessing}
-          />
+          <div className="flex-1 overflow-auto bg-slate-950 p-2 min-h-[400px]" data-color-mode="dark">
+            <CodeEditor
+              value={sourceCode}
+              language={language}
+              placeholder="Paste or write your code here..."
+              onChange={(e) => setSourceCode(e.target.value)}
+              padding={15}
+              disabled={isProcessing}
+              style={{
+                fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace',
+                fontSize: 14,
+                backgroundColor: 'transparent',
+                minHeight: '100%'
+              }}
+            />
+          </div>
         </div>
 
-        {/* RIGHT PANEL: Live Feedback Telemetry Dashboard */}
         <div className="flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
-          
-          {/* Empty Display Base State */}
           {!analysis && !isProcessing && !errorMessage && (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
               <div className="h-16 w-16 bg-slate-950 rounded-2xl flex items-center justify-center border border-slate-800 mb-4 shadow-inner">
                 <Terminal className="h-8 w-8 text-slate-500" />
               </div>
               <h3 className="text-lg font-medium text-slate-300">Awaiting Code Submission</h3>
-              <p className="text-sm text-slate-500 max-w-sm mt-1">Paste your Javascript code block inside the console and trigger diagnostics to execute static code analysis execution paths.</p>
+              <p className="text-sm text-slate-500 max-w-sm mt-1">Paste your code block inside the console and trigger diagnostics to execute static code analysis execution paths.</p>
             </div>
           )}
 
-          {/* Active Process Engine Loading Layout State */}
           {isProcessing && (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-slate-950/30">
               <div className="relative flex items-center justify-center mb-6">
@@ -110,7 +134,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Fallback Connection Error UI */}
           {errorMessage && (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
               <div className="h-12 w-12 bg-rose-500/10 border border-rose-500/20 rounded-full flex items-center justify-center mb-3">
@@ -124,10 +147,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Active Data Output Tracking Console */}
           {analysis && !isProcessing && (
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Tab navigation headers */}
               <div className="bg-slate-950/80 border-b border-slate-800 flex">
                 <button
                   onClick={() => setActiveTab('complexity')}
@@ -148,7 +169,6 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* Toggled data cards */}
               <div className="flex-1 overflow-y-auto p-6 bg-slate-950/10">
                 {activeTab === 'complexity' && (
                   <div className="space-y-6">
@@ -193,7 +213,7 @@ export default function Dashboard() {
                           <div className="p-4 space-y-3">
                             <p className="text-sm text-slate-300 leading-relaxed font-normal">{issue.description}</p>
                             <div className="rounded-lg overflow-hidden text-xs shadow-inner">
-                              <SyntaxHighlighter language="javascript" style={coldarkDark} customStyle={{ margin: 0, padding: '12px' }}>
+                              <SyntaxHighlighter language={language === 'js' ? 'javascript' : language === 'py' ? 'python' : language} style={coldarkDark} customStyle={{ margin: 0, padding: '12px' }}>
                                 {issue.snippet}
                               </SyntaxHighlighter>
                             </div>
