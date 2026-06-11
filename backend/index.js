@@ -8,7 +8,8 @@ const authRouter = require('./auth');
 const { authenticateToken } = require('./middleware');
 
 const app = express();
-const port = 5000;
+//const port = 5000;
+const port = process.env.PORT || 5000;
 
 app.use(cors({
   origin: ['http://localhost:3000', 'https://ai-code-reviewer-frontend-pink.vercel.app']
