@@ -36,6 +36,7 @@ router.post('/register', async (req, res) => {
       user: { id: newUser.id, email: newUser.email, name: newUser.name }
     });
   } catch (error) {
+    console.error("REGISTRATION CRASH ERROR:", error);
     return res.status(500).json({ error: 'Internal server error during account registration.' });
   }
 });
@@ -65,6 +66,7 @@ router.post('/login', async (req, res) => {
       user: { id: user.id, email: user.email, name: user.name }
     });
   } catch (error) {
+    console.error("LOGIN CRASH ERROR:", error);
     return res.status(500).json({ error: 'Internal server error during session login.' });
   }
 });
