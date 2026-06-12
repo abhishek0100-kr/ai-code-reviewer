@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const { GoogleGenAI } = require('@google/genai');
 const prisma = require('./db');
 const { reviewResponseSchema } = require('./schema');
@@ -8,15 +9,34 @@ const authRouter = require('./auth');
 const { authenticateToken } = require('./middleware');
 
 const app = express();
-//const port = 5000;
 const port = process.env.PORT || 5000;
+
+const baseLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this node. Please try again after 15 minutes.' }
+});
+
+const aiAnalysisLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'AI diagnostic threshold reached. Please limit code reviews to 5 per minute.' }
+});
+
+app.use(baseLimiter);
 
 app.use(cors({
   origin: ['http://localhost:3000', 'https://ai-code-reviewer-frontend-pink.vercel.app']
 }));
-app.use(express.json());
+
+app.use(express.json({ limit: '500kb' }));
 
 app.use('/api/auth', authRouter);
+
 app.get('/api/review/history', authenticateToken, async (req, res) => {
   if (!req.user || !req.user.userId) {
     return res.status(401).json({ error: 'Authentication token required to view history.' });
@@ -35,7 +55,7 @@ app.get('/api/review/history', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/review', authenticateToken, async (req, res) => {
+app.post('/api/review', aiAnalysisLimiter, authenticateToken, async (req, res) => {
   const { code, language } = req.body;
 
   if (!code || typeof code !== 'string') {
