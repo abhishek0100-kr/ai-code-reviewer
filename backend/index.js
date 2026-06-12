@@ -7,6 +7,7 @@ const prisma = require('./db');
 const { reviewResponseSchema } = require('./schema');
 const authRouter = require('./auth');
 const { authenticateToken } = require('./middleware');
+const logger = require('./logger');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -35,6 +36,11 @@ app.use(cors({
 
 app.use(express.json({ limit: '500kb' }));
 
+app.use((req, res, next) => {
+  logger.info(`HTTP ${req.method} ${req.url}`);
+  next();
+});
+
 app.use('/api/auth', authRouter);
 
 app.get('/api/review/history', authenticateToken, async (req, res) => {
@@ -50,7 +56,7 @@ app.get('/api/review/history', authenticateToken, async (req, res) => {
 
     return res.status(200).json(historicalAudits);
   } catch (error) {
-    console.error("History retrieval pipeline fault:", error.message);
+    logger.error("History retrieval pipeline fault", error);
     return res.status(500).json({ error: 'Failed to retrieve structural audit history.' });
   }
 });
@@ -66,6 +72,7 @@ app.post('/api/review', aiAnalysisLimiter, authenticateToken, async (req, res) =
   const activeUserId = req.user ? req.user.userId : null;
 
   try {
+    logger.info(`Initiating Gemini AI audit for language vector: ${selectedLanguage}`);
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const systemInstruction = 
@@ -105,10 +112,11 @@ app.post('/api/review', aiAnalysisLimiter, authenticateToken, async (req, res) =
       }
     });
 
+    logger.info(`Audit successfully stored in Supabase for user correlation ID: ${activeUserId}`);
     return res.status(200).json(parsedData);
 
   } catch (error) {
-    console.error("Internal Engine Fault Logged:", error.message);
+    logger.error("Internal Engine Fault Logged", error);
     return res.status(502).json({
       error: "Analysis failure",
       message: error.message 
@@ -121,5 +129,5 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server is successfully running on port ${port}`);
+  logger.info(`Server is successfully running on port ${port}`);
 });
