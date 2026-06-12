@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('./db');
+const logger = require('./logger');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -31,12 +32,13 @@ router.post('/register', async (req, res) => {
 
     const token = jwt.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: '7d' });
 
+    logger.info(`New developer profile ecosystem initialized successfully: ${email}`);
     return res.status(201).json({
       token,
       user: { id: newUser.id, email: newUser.email, name: newUser.name }
     });
   } catch (error) {
-    console.error("REGISTRATION CRASH ERROR:", error);
+    logger.error("Registration pipeline structural collapse:", error);
     return res.status(500).json({ error: 'Internal server error during account registration.' });
   }
 });
@@ -61,12 +63,13 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
+    logger.info(`Session identity token issued for profile node: ${email}`);
     return res.json({
       token,
       user: { id: user.id, email: user.email, name: user.name }
     });
   } catch (error) {
-    console.error("LOGIN CRASH ERROR:", error);
+    logger.error("Authentication session login fault:", error);
     return res.status(500).json({ error: 'Internal server error during session login.' });
   }
 });
