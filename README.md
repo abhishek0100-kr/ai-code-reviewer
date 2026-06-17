@@ -7,6 +7,19 @@ An AI-powered code review platform that analyzes source code and provides struct
 **Application:** https://ai-code-reviewer-frontend-pink.vercel.app
 
 ---
+## 📸 Screenshots
+
+### Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+### Review Output
+
+![Review Output](screenshots/review-output.png)
+
+### Login Page
+
+![Login Page](screenshots/login-page.png)
 
 ## 📖 Overview
 
