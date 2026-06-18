@@ -249,7 +249,7 @@ Enable shared workspaces and collaborative code reviews.
 
 ## 🎯 Key Learning Outcomes
 
-This project helped me gain practical experience with:
+This project helped me gain practical experience with:-
 
 * Full-Stack Development
 * REST API Design
