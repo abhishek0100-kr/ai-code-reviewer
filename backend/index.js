@@ -104,9 +104,9 @@ app.post('/api/review', aiAnalysisLimiter, authenticateToken, async (req, res) =
         userId: activeUserId,
         language: selectedLanguage,
         sourceCode: code,
-        timeComplexity: parsedData.timeComplexity || 'N/A',
-        spaceComplexity: parsedData.spaceComplexity || 'N/A',
-        explanation: parsedData.explanation || '',
+        timeComplexity: parsedData.complexity?.time || 'N/A',
+        spaceComplexity: parsedData.complexity?.space || 'N/A',
+        explanation: parsedData.complexity?.explanation || '',
         issuesCount: Array.isArray(parsedData.issues) ? parsedData.issues.length : 0,
         issuesJson: JSON.stringify(parsedData.issues || [])
       }
