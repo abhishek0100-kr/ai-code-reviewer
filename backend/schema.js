@@ -27,4 +27,14 @@ const reviewResponseSchema = {
   required: ["complexity", "issues"]
 };
 
-module.exports = { reviewResponseSchema };
+// Phase 7A Refactoring Structured Output Schema
+const refactorResponseSchema = {
+  type: "OBJECT",
+  properties: {
+    explanation: { type: "STRING" },
+    refactoredCode: { type: "STRING" }
+  },
+  required: ["explanation", "refactoredCode"]
+};
+
+module.exports = { reviewResponseSchema, refactorResponseSchema };

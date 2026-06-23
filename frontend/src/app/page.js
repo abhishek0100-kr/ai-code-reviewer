@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Terminal, Play, Cpu, ShieldAlert, CheckCircle, RefreshCw, LogOut, User, History, Clock, Download, GitBranch, Code } from 'lucide-react';
+import { Terminal, Play, Cpu, ShieldAlert, CheckCircle, RefreshCw, LogOut, User, History, Clock, Download, GitBranch, Code, Sparkles, AlertCircle } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { coldarkDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import CodeEditor from '@uiw/react-textarea-code-editor';
@@ -31,6 +31,12 @@ export default function Dashboard() {
   
   const [historyList, setHistoryList] = useState([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // Phase 7A: Localized target tracking hooks for individual code fixes
+  const [refactoringIssueIndex, setRefactoringIssueIndex] = useState(null);
+  const [isRefactoring, setIsRefactoring] = useState(false);
+  const [refactorData, setRefactorData] = useState(null); // Holds { explanation, refactoredCode }
+  const [refactorError, setRefactorError] = useState('');
 
   useEffect(() => {
     if (!loading && !token) {
@@ -72,6 +78,9 @@ export default function Dashboard() {
     setIsProcessing(true);
     setErrorMessage('');
     setAnalysis(null);
+    setRefactoringIssueIndex(null);
+    setRefactorData(null);
+    setRefactorError('');
 
     const targetUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -114,7 +123,48 @@ export default function Dashboard() {
     }
   };
 
+  // Phase 7A: Asynchronous Refactoring Action Handler
+  const executeCodeRefactorPatch = async (issue, index) => {
+    setIsRefactoring(true);
+    setRefactorError('');
+    setRefactorData(null);
+    setRefactoringIssueIndex(index);
+
+    const targetUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+    try {
+      const response = await fetch(`${targetUrl}/api/refactor`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          filePath: issue.filePath || '',
+          issueDescription: issue.description,
+          vulnerableSnippet: issue.snippet
+        })
+      });
+
+      const responseBody = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseBody.error || responseBody.message || 'Failed compilation of targeted refactor patch.');
+      }
+
+      setRefactorData(responseBody);
+    } catch (err) {
+      setRefactorError(err.message || 'Connection timeout encountered during refactor code generation.');
+    } finally {
+      setIsRefactoring(false);
+    }
+  };
+
   const loadHistoricalRecord = (auditRecord) => {
+    setRefactoringIssueIndex(null);
+    setRefactorData(null);
+    setRefactorError('');
+
     if (auditRecord.language === 'repository') {
       setAnalysisMode('repository');
       setRepoUrl(auditRecord.sourceCode);
@@ -211,7 +261,6 @@ ${issue.snippet}
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          {/* Diagnostic Mode Toggles */}
           <div className="bg-slate-900 p-0.5 rounded-lg border border-slate-800 flex gap-0.5">
             <button
               onClick={() => { setAnalysisMode('snippet'); setAnalysis(null); }}
@@ -434,7 +483,6 @@ ${issue.snippet}
                   {activeTab === 'complexity' && (
                     <div className="space-y-6">
                       {analysis.language === 'repository' ? (
-                        /* Repository Health Score View Rendering */
                         <div className="space-y-6">
                           <div className="bg-slate-950/60 p-5 rounded-xl border border-indigo-500/20 text-center shadow-lg">
                             <span className="text-[10px] font-bold tracking-wider uppercase text-indigo-400 block mb-1">Overall Project Health Score</span>
@@ -455,7 +503,6 @@ ${issue.snippet}
                           </div>
                         </div>
                       ) : (
-                        /* Isolated Code Snippet Complexity Rendering */
                         <div className="grid grid-cols-2 gap-4">
                           <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 shadow-md">
                             <span className="text-[10px] font-bold tracking-wider uppercase text-indigo-400 block mb-1">Time Profile Complexity</span>
@@ -486,33 +533,105 @@ ${issue.snippet}
                           <p className="text-xs text-slate-500 mt-0.5">No compilation anti-patterns discovered.</p>
                         </div>
                       ) : (
-                        analysis.issues?.map((issue, index) => (
-                          <div key={index} className="bg-slate-950/60 rounded-xl border border-slate-800 overflow-hidden shadow-sm hover:border-slate-700 transition">
-                            <div className="px-4 py-2.5 bg-slate-950/90 border-b border-slate-800 flex justify-between items-center flex-wrap gap-2">
-                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
-                                issue.type === 'Security' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 
-                                issue.type === 'Optimization' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                                'bg-sky-500/10 text-sky-400 border-sky-500/20'
-                              }`}>
-                                {issue.type} Flag
-                              </span>
-                              <div className="text-xs font-mono text-slate-400 font-medium flex items-center gap-2">
-                                {issue.filePath && (
-                                  <span className="text-indigo-400 max-w-[180px] truncate bg-slate-900/80 px-1.5 py-0.5 rounded border border-slate-800">{issue.filePath}</span>
+                        analysis.issues?.map((issue, index) => {
+                          const isShowingRefactorRow = refactoringIssueIndex === index;
+
+                          return (
+                            <div key={index} className="bg-slate-950/60 rounded-xl border border-slate-800 overflow-hidden shadow-sm hover:border-slate-700 transition">
+                              <div className="px-4 py-2.5 bg-slate-950/90 border-b border-slate-800 flex justify-between items-center flex-wrap gap-2">
+                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                                  issue.type === 'Security' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 
+                                  issue.type === 'Optimization' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
+                                  'bg-sky-500/10 text-sky-400 border-sky-500/20'
+                                }`}>
+                                  {issue.type} Flag
+                                </span>
+                                
+                                <div className="flex items-center gap-3">
+                                  <div className="text-xs font-mono text-slate-400 font-medium flex items-center gap-2">
+                                    {issue.filePath && (
+                                      <span className="text-indigo-400 max-w-[180px] truncate bg-slate-900/80 px-1.5 py-0.5 rounded border border-slate-800">{issue.filePath}</span>
+                                    )}
+                                    <span>Line: {issue.line}</span>
+                                  </div>
+                                  
+                                  {/* Phase 7A Interactive Code Refactoring Action Button Element */}
+                                  <button
+                                    onClick={() => executeCodeRefactorPatch(issue, index)}
+                                    disabled={isRefactoring && isShowingRefactorRow}
+                                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-indigo-500/10 hover:bg-indigo-600 hover:text-white text-indigo-300 disabled:bg-slate-800 disabled:text-slate-500 rounded border border-indigo-500/30 transition shadow-sm cursor-pointer"
+                                  >
+                                    {isRefactoring && isShowingRefactorRow ? (
+                                      <RefreshCw className="h-2.5 w-2.5 animate-spin" />
+                                    ) : (
+                                      <Sparkles className="h-2.5 w-2.5 text-indigo-400 group-hover:text-white" />
+                                    )}
+                                    <span>{isShowingRefactorRow ? 'Refactoring...' : '✨ Fix Issue'}</span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="p-4 space-y-4">
+                                <p className="text-sm text-slate-300 leading-relaxed font-normal">{issue.description}</p>
+                                
+                                {/* Phase 7A Polymorphic Side-by-Side Comparison Container Blocks */}
+                                {isShowingRefactorRow ? (
+                                  <div className="space-y-3 mt-2 animate-fadeIn">
+                                    {refactorError && (
+                                      <div className="flex items-center gap-2 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-xs text-rose-400">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <span>{refactorError}</span>
+                                      </div>
+                                    )}
+
+                                    {isRefactoring && (
+                                      <div className="flex flex-col items-center justify-center p-8 bg-slate-950/40 rounded-xl border border-slate-800 text-center">
+                                        <RefreshCw className="h-5 w-5 text-indigo-400 animate-spin mb-1.5" />
+                                        <p className="text-xs text-slate-400 tracking-wide">Compiling AI Refactoring Suggestions...</p>
+                                      </div>
+                                    )}
+
+                                    {refactorData && (
+                                      <div className="space-y-3">
+                                        {/* Before vs After Grid Workspace Panel */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div>
+                                            <span className="text-[9px] font-bold tracking-wider uppercase text-rose-400 block mb-1">⚠️ Original Vulnerable Code</span>
+                                            <div className="rounded-lg overflow-hidden text-xs shadow-inner border border-rose-500/20">
+                                              <SyntaxHighlighter language={analysis.language === 'repository' ? 'javascript' : language} style={coldarkDark} customStyle={{ margin: 0, padding: '12px', background: '#0f111a' }}>
+                                                {issue.snippet}
+                                              </SyntaxHighlighter>
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <span className="text-[9px] font-bold tracking-wider uppercase text-emerald-400 block mb-1">✨ Optimized Clean Code</span>
+                                            <div className="rounded-lg overflow-hidden text-xs shadow-inner border border-emerald-500/20">
+                                              <SyntaxHighlighter language={analysis.language === 'repository' ? 'javascript' : language} style={coldarkDark} customStyle={{ margin: 0, padding: '12px', background: '#0a1410' }}>
+                                                {refactorData.refactoredCode}
+                                              </SyntaxHighlighter>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="bg-indigo-950/20 border border-indigo-500/10 p-3.5 rounded-lg">
+                                          <h5 className="text-[10px] font-bold tracking-wider uppercase text-indigo-400 mb-1">Refactoring Engineering Rationale:</h5>
+                                          <p className="text-xs text-slate-300 leading-relaxed font-normal">{refactorData.explanation}</p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  /* Clean Static Code view when fix button is unselected */
+                                  <div className="rounded-lg overflow-hidden text-xs shadow-inner">
+                                    <SyntaxHighlighter language={analysis.language === 'repository' ? 'javascript' : language} style={coldarkDark} customStyle={{ margin: 0, padding: '12px' }}>
+                                      {issue.snippet}
+                                    </SyntaxHighlighter>
+                                  </div>
                                 )}
-                                <span>Line: {issue.line}</span>
                               </div>
                             </div>
-                            <div className="p-4 space-y-3">
-                              <p className="text-sm text-slate-300 leading-relaxed font-normal">{issue.description}</p>
-                              <div className="rounded-lg overflow-hidden text-xs shadow-inner">
-                                <SyntaxHighlighter language={analysis.language === 'repository' ? 'javascript' : language} style={coldarkDark} customStyle={{ margin: 0, padding: '12px' }}>
-                                  {issue.snippet}
-                                </SyntaxHighlighter>
-                              </div>
-                            </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   )}

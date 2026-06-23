@@ -4,7 +4,7 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { GoogleGenAI } = require('@google/genai');
 const prisma = require('./db');
-const { reviewResponseSchema } = require('./schema');
+const { reviewResponseSchema, refactorResponseSchema } = require('./schema');
 const authRouter = require('./auth');
 const { authenticateToken } = require('./middleware');
 const logger = require('./logger');
@@ -255,7 +255,6 @@ app.post('/api/review/repository', aiAnalysisLimiter, authenticateToken, async (
 
     const parsedData = JSON.parse(aiResponse.text);
 
-    // Hardened defensive storage block to safeguard the network request against foreign key tracking bugs
     let savedAudit = null;
     try {
       savedAudit = await prisma.audit.create({
@@ -290,6 +289,57 @@ app.post('/api/review/repository', aiAnalysisLimiter, authenticateToken, async (
     logger.error("Internal Repository Analyzer Engine Fault Logged", error);
     return res.status(502).json({
       error: "Repository analysis failure",
+      message: error.message
+    });
+  }
+});
+
+// Phase 7A: Automated Targeted AI Code Refactoring Core Endpoint
+app.post('/api/refactor', aiAnalysisLimiter, authenticateToken, async (req, res) => {
+  const { filePath, issueDescription, vulnerableSnippet } = req.body;
+
+  if (!vulnerableSnippet || typeof vulnerableSnippet !== 'string') {
+    return res.status(400).json({ error: "Missing or invalid code property 'vulnerableSnippet'." });
+  }
+
+  try {
+    logger.info(`Executing Phase 7A targeted refactor loop for resource block: ${filePath || 'Isolated Snippet'}`);
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+    const targetContextPrompt = 
+      `Context Target Location: ${filePath || 'Isolated Code Snippet Block'}\n` +
+      `Identified Vulnerability Flaw Matrix: ${issueDescription || 'General Code Quality Correction Request'}\n\n` +
+      `Target Code Requiring Structural Correction:\n\`\`\`\n${vulnerableSnippet}\n\`\`\``;
+
+    const systemInstruction = 
+      "You are a Senior Software Engineer, Security Auditor, and Expert Code Refactoring Assistant.\n" +
+      "Your objective is to ingest the provided vulnerable code snippet, evaluate the accompanying flaw description context, and generate a secure, high-performance, cleanly optimized fix.\n" +
+      "You must provide a clear, concise engineering rationale inside the 'explanation' field.\n" +
+      "You must output the completely rewritten, working, clean code block inside the 'refactoredCode' property. " +
+      "Do NOT return markdown wrapper ticks inside your schema properties. Return ONLY the raw code logic string.";
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: targetContextPrompt,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: 'application/json',
+        responseSchema: refactorResponseSchema,
+        temperature: 0.2
+      }
+    });
+
+    if (!response || !response.text) {
+      throw new Error("Empty return payload context from AI model during patch compilation.");
+    }
+
+    const refactoredPayload = JSON.parse(response.text);
+    return res.status(200).json(refactoredPayload);
+
+  } catch (error) {
+    logger.error("Phase 7A Refactoring Core Pipeline Failure:", error);
+    return res.status(502).json({
+      error: "Refactoring patch loop compilation failure",
       message: error.message
     });
   }
