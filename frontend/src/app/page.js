@@ -331,32 +331,60 @@ export default function Dashboard() {
             ) : historyList.length === 0 ? (
               <p className="text-xs text-slate-500 text-center py-8">No historical snapshots logged yet.</p>
             ) : (
-              historyList.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => loadHistoricalRecord(item)}
-                  className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-3 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/80 transition shadow-sm group text-left"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-semibold group-hover:text-indigo-400 transition ${item.language === 'repository' ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20' : 'bg-slate-800 text-slate-300'}`}>
-                      {item.language}
-                    </span>
-                    <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
-                      <Clock className="h-2.5 w-2.5" />
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </span>
+              historyList.map((item) => {
+                const isRepoMode = item.language === 'repository';
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => loadHistoricalRecord(item)}
+                    className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-3.5 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/80 transition duration-200 group text-left space-y-2.5"
+                  >
+                    {/* Top Metric Header Tier */}
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[9px] font-mono tracking-wider font-bold px-2 py-0.5 rounded-md border ${
+                        isRepoMode 
+                          ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20' 
+                          : 'bg-slate-800 text-slate-300 border-slate-700'
+                      }`}>
+                        {isRepoMode ? '📁 REPO MODE' : '📝 SNIPPET'}
+                      </span>
+                      <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1 font-mono">
+                        <Clock className="h-2.5 w-2.5 text-slate-600" />
+                        {new Date(item.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                    {/* Main Targeted Context Link Node */}
+                    <div>
+                      <p className="text-xs font-mono font-bold text-slate-200 group-hover:text-indigo-400 transition truncate">
+                        {isRepoMode ? item.sourceCode.replace('https://github.com/', '🔗 ') : 'Isolated Source Code Run'}
+                      </p>
+                      
+                      {/* Sub-Context Telemetry Row */}
+                      <div className="text-[10px] font-mono text-slate-400 mt-1.5 flex items-center gap-2">
+                        {isRepoMode ? (
+                          <span className="text-indigo-300 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20 font-semibold">
+                            🎯 {item.timeComplexity.replace('Score: ', '')}
+                          </span>
+                        ) : (
+                          <span className="text-cyan-300 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">
+                            📊 {item.timeComplexity} | {item.spaceComplexity}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Bottom Quantitative Counter Badge */}
+                    <div className="pt-2 border-t border-slate-800/40 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                      <span>Issues Captured:</span>
+                      <span className={`font-bold font-mono px-1.5 rounded ${
+                        item.issuesCount > 0 ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20' : 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                      }`}>
+                        {item.issuesCount} flags
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-xs font-mono font-bold text-indigo-300 mt-1.5 truncate">
-                    {item.language === 'repository' ? item.sourceCode.replace('https://github.com/', '') : `${item.timeComplexity} | ${item.spaceComplexity}`}
-                  </p>
-                  {item.language === 'repository' && (
-                    <p className="text-[10px] text-indigo-400 font-mono mt-0.5 font-bold">{item.timeComplexity}</p>
-                  )}
-                  <span className="text-[10px] text-slate-500 block mt-1 truncate">
-                    Issues captured: {item.issuesCount}
-                  </span>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </aside>
@@ -422,25 +450,100 @@ export default function Dashboard() {
           {/* Right Metrics & Tab Layout Output */}
           <div className="flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
             {!analysis && !isProcessing && !errorMessage && (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                <div className="h-16 w-16 bg-slate-950 rounded-2xl flex items-center justify-center border border-slate-800 mb-4 shadow-inner">
-                  <Terminal className="h-8 w-8 text-slate-500" />
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 max-w-2xl mx-auto w-full space-y-6 animate-fadeIn">
+                {/* Premium Multi-Layer Hub Animation Icon */}
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-xl animate-pulse h-20 w-20" />
+                  <div className="relative h-16 w-16 bg-slate-950 rounded-2xl flex items-center justify-center border border-slate-800 shadow-xl group hover:border-indigo-500/40 transition-colors">
+                    <GitBranch className="h-8 w-8 text-indigo-400 group-hover:scale-110 transition-transform" />
+                  </div>
                 </div>
-                <h3 className="text-lg font-medium text-slate-300">Awaiting Target Ingestion</h3>
-                <p className="text-sm text-slate-500 max-w-sm mt-1">Submit a live repo endpoint URL or click a past audit report snapshot log row item from the history panel.</p>
+
+                {/* Explanatory Header Node */}
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold tracking-tight text-slate-100">
+                    Awaiting Codebase Ingestion Tree
+                  </h3>
+                  <p className="text-sm text-slate-400 leading-relaxed max-w-md">
+                    Provide any public GitHub repository endpoint link. Our secure static parsing pipeline will index the directory, map cross-file functional trees, and compile static vulnerability models.
+                  </p>
+                </div>
+
+                {/* Interactive Supported Ecosystem Badges */}
+                <div className="space-y-2 w-full pt-2">
+                  <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500 block">Supported Compiler Runtimes</span>
+                  <div className="flex flex-wrap items-center justify-center gap-1.5">
+                    {['JavaScript', 'Python', 'Java', 'C++', 'C', 'Go'].map((lang) => (
+                      <span key={lang} className="px-2.5 py-1 text-[11px] font-mono font-medium bg-slate-950 border border-slate-800/80 text-slate-400 rounded-lg shadow-sm hover:border-indigo-500/30 hover:text-slate-200 transition-all">
+                        {lang}
+                      </span>
+                    ))}
+                    <span className="px-2.5 py-1 text-[11px] font-mono font-bold bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg">
+                      + Static Frameworks
+                    </span>
+                  </div>
+                </div>
+
+                {/* Frictionless One-Click Example Discovery Links */}
+                <div className="bg-slate-950/40 border border-slate-800/60 rounded-xl p-4 w-full mt-4 text-left space-y-2.5">
+                  <span className="text-[10px] font-bold tracking-widest uppercase text-slate-400 block">Quick Demo Codebases</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      { label: 'ai-code-reviewer (Current)', url: 'https://github.com/abhishek0100-kr/ai-code-reviewer' },
+                      { label: 'express-sample-api', url: 'https://github.com/expressjs/express' }
+                    ].map((example) => (
+                      <button
+                        key={example.label}
+                        onClick={() => setRepoUrl(example.url)}
+                        className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 hover:border-indigo-500/40 text-xs font-mono text-indigo-300 hover:text-indigo-200 text-left transition active:scale-[0.98]"
+                      >
+                        <span className="truncate max-w-[160px] font-medium">{example.label}</span>
+                        <Play className="h-3 w-3 text-slate-500 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
             {isProcessing && (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-slate-950/30">
-                <div className="relative flex items-center justify-center mb-6">
-                  <div className="absolute h-16 w-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                  <Cpu className="h-6 w-6 text-indigo-400 animate-pulse" />
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-slate-950/20 space-y-6 animate-fadeIn">
+                {/* Micro-Interaction Pulse Pipeline Graph */}
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute h-20 w-20 border-2 border-indigo-500/10 border-t-indigo-400 rounded-full animate-spin duration-1000" />
+                  <div 
+                    className="absolute h-14 w-14 border-2 border-dashed border-cyan-500/20 border-b-cyan-400 rounded-full animate-spin duration-700" 
+                    style={{ animationDirection: 'reverse' }}
+                  />
+                  <div className="h-10 w-10 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center shadow-lg">
+                    <Cpu className="h-5 w-5 text-indigo-400 animate-pulse" />
+                  </div>
                 </div>
-                <h3 className="text-lg font-medium text-slate-200">{isCurrentRepo ? 'Ingesting Repository Source Tree' : 'Executing LLM Verification'}</h3>
-                <p className="text-sm text-slate-400 max-w-md mt-2 anonymity animate-pulse">
-                  {isCurrentRepo ? 'Traversing remote Git blobs and sanitizing package-lock vectors...' : 'Running static scanning validations against structural security models...'}
-                </p>
+
+                {/* Stage Diagnostics Message Readouts */}
+                <div className="space-y-1.5">
+                  <h3 className="text-md font-bold tracking-tight text-slate-200">
+                    {isCurrentRepo ? 'Ingesting Repository Workspace Tree' : 'Executing LLM Verification'}
+                  </h3>
+                  <p className="text-xs text-indigo-400 font-mono tracking-wide animate-pulse h-4">
+                    {isCurrentRepo 
+                      ? '▶ Traversing tree nodes ──> sanitizing blobs ──> bundling system context...' 
+                      : '▶ Mapping syntax vectors ──> analyzing complexity ──> evaluating metrics...'}
+                  </p>
+                </div>
+
+                {/* Premium High-Fidelity UI Skeleton Placeholder Loading Bars */}
+                <div className="w-full max-w-sm space-y-3 pt-4 border-t border-slate-800/60 opacity-60">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+                    <span>Compiling Matrix Profiles</span>
+                    <span className="animate-ping text-indigo-400">●</span>
+                  </div>
+                  <div className="h-10 bg-slate-900/60 rounded-xl border border-slate-800/40 animate-pulse w-full" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="h-14 bg-slate-900/40 rounded-xl border border-slate-800/30 animate-pulse" />
+                    <div className="h-14 bg-slate-900/40 rounded-xl border border-slate-800/30 animate-pulse" />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -500,12 +603,27 @@ export default function Dashboard() {
                           <div className="grid grid-cols-2 gap-4">
                             {analysis.complexity.space.split('|').map((item, index) => {
                               const [label, val] = item.trim().split(':');
+                              const scoreNum = parseInt(val, 10) || 0;
                               const fullLabel = label === 'S' ? 'Security' : label === 'A' ? 'Architecture' : label === 'R' ? 'Readability' : 'Maintainability';
-                              const colorClass = label === 'S' ? 'text-rose-400' : label === 'A' ? 'text-cyan-400' : label === 'R' ? 'text-emerald-400' : 'text-amber-400';
+
+                              // Dynamic color state mapping based on score tiers
+                              const barColorClass = scoreNum >= 80 ? 'bg-emerald-500' : scoreNum >= 50 ? 'bg-amber-500' : 'bg-rose-500';
+                              const textColorClass = label === 'S' ? 'text-rose-400' : label === 'A' ? 'text-cyan-400' : label === 'R' ? 'text-emerald-400' : 'text-amber-400';
+
                               return (
-                                <div key={index} className="bg-slate-950/40 p-3.5 rounded-xl border border-slate-800/80">
-                                  <span className={`text-[10px] font-bold tracking-wider uppercase block mb-1 ${colorClass}`}>{fullLabel} Rating</span>
-                                  <code className="text-xl font-black font-mono text-slate-200">{val}/100</code>
+                                <div key={index} className="bg-slate-950/40 p-4 rounded-xl border border-slate-800/80 space-y-2.5 shadow-md">
+                                  <div className="flex items-center justify-between">
+                                    <span className={`text-[10px] font-bold tracking-wider uppercase ${textColorClass}`}>{fullLabel} Rating</span>
+                                    <code className="text-xs font-bold font-mono text-slate-300">{scoreNum}/100</code>
+                                  </div>
+
+                                  {/* High-Fidelity Progress Track Indicator */}
+                                  <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                                    <div
+                                      className={`h-full rounded-full transition-all duration-1000 ${barColorClass}`}
+                                      style={{ width: `${scoreNum}%` }}
+                                    />
+                                  </div>
                                 </div>
                               );
                             })}
@@ -525,56 +643,98 @@ export default function Dashboard() {
                       )}
                       
                       <div className="bg-slate-950/40 p-5 rounded-xl border border-slate-800/60">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
                           {analysis.language === 'repository' ? 'Macro System Architectural Overview' : 'Algorithmic Vector Rationale'}
                         </h4>
-                        <p className="text-sm text-slate-300 leading-relaxed font-normal">{analysis.complexity.explanation}</p>
+                        
+                        {/* Step 7 UI Polish: Breakdown walls of text into readable line entries */}
+                        <div className="text-sm text-slate-300 leading-relaxed font-normal space-y-2">
+                          {analysis.complexity.explanation.split('\n').map((line, lIdx) => {
+                            if (!line.trim()) return null;
+                            
+                            // Check for common markdown list or status indicators
+                            const isCheck = line.trim().startsWith('✓') || line.trim().startsWith('- [x]');
+                            const isWarning = line.trim().startsWith('⚠') || line.trim().startsWith('! ');
+                            
+                            let lineClass = "text-slate-300";
+                            if (isCheck) lineClass = "text-emerald-400 font-medium pl-2";
+                            if (isWarning) lineClass = "text-amber-400 font-medium pl-2";
+                            return (
+                              <p key={lIdx} className={lineClass}>
+                                {line}
+                              </p>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}
 
                   {activeTab === 'issues' && (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       {analysis.issues?.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                          <CheckCircle className="h-10 w-10 text-emerald-500/40 mb-2" />
-                          <p className="text-sm font-medium text-slate-400">Review Matrix Clear</p>
-                          <p className="text-xs text-slate-500 mt-0.5">No compilation anti-patterns discovered.</p>
+                        <div className="flex flex-col items-center justify-center py-16 text-center max-w-sm mx-auto space-y-4 animate-fadeIn">
+                          {/* Premium Success Indicator Ring */}
+                          <div className="relative flex items-center justify-center">
+                            <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-md h-12 w-12 animate-ping duration-1000" />
+                            <div className="h-12 w-12 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center shadow-lg">
+                              <CheckCircle className="h-6 w-6 text-emerald-400" />
+                            </div>
+                          </div>
+                          
+                          {/* Compliance Readout Message */}
+                          <div className="space-y-1">
+                            <p className="text-sm font-bold text-slate-200">Review Matrix Clean</p>
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                              Excellent work! Our static parsing diagnostics detected zero structural compilation anti-patterns or security code vulnerabilities inside this target context segment.
+                            </p>
+                          </div>
                         </div>
                       ) : (
                         analysis.issues?.map((issue, index) => {
                           const isShowingRefactorRow = refactoringIssueIndex === index;
 
+                          // Step 3 UI Polish: Map unique icons and color themes to each type
+                          const isSecurity = issue.type === 'Security';
+                          const isOptimization = issue.type === 'Optimization';
+                          const typeLabel = isSecurity ? '🛡️ Security Flag' : isOptimization ? '⚡ Performance Flag' : '📐 Architecture Flag';
+                          const themeClass = isSecurity
+                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            : isOptimization
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                            : 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+
                           return (
-                            <div key={index} className="bg-slate-950/60 rounded-xl border border-slate-800 overflow-hidden shadow-sm hover:border-slate-700 transition">
-                              <div className="px-4 py-2.5 bg-slate-950/90 border-b border-slate-800 flex justify-between items-center flex-wrap gap-2">
-                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
-                                  issue.type === 'Security' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 
-                                  issue.type === 'Optimization' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                                  'bg-sky-500/10 text-sky-400 border-sky-500/20'
-                                }`}>
-                                  {issue.type} Flag
+                            <div key={index} className={`bg-slate-950/60 rounded-xl border border-slate-800 overflow-hidden shadow-md hover:border-slate-700/80 transition duration-200`}>
+                              {/* Premium Header Bar Interface */}
+                              <div className="px-4 py-3 bg-slate-950/90 border-b border-slate-800 flex justify-between items-center flex-wrap gap-3">
+                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border ${themeClass}`}>
+                                  {typeLabel}
                                 </span>
-                                
+
                                 <div className="flex items-center gap-3">
-                                  <div className="text-xs font-mono text-slate-400 font-medium flex items-center gap-2">
+                                  <div className="text-xs font-mono font-medium flex items-center gap-2">
                                     {issue.filePath && (
-                                      <span className="text-indigo-400 max-w-[180px] truncate bg-slate-900/80 px-1.5 py-0.5 rounded border border-slate-800">{issue.filePath}</span>
+                                      <span className="text-indigo-400 font-semibold max-w-[220px] truncate bg-slate-900/90 px-2 py-0.5 rounded-md border border-slate-800">
+                                        📁 {issue.filePath}
+                                      </span>
                                     )}
-                                    <span>Line: {issue.line}</span>
+                                    <span className="bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800 text-slate-400">
+                                      Line: <strong className="text-slate-200">{issue.line}</strong>
+                                    </span>
                                   </div>
-                                  
+
                                   <button
                                     onClick={() => executeCodeRefactorPatch(issue, index)}
                                     disabled={isRefactoring && isShowingRefactorRow}
-                                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-indigo-500/10 hover:bg-indigo-600 hover:text-white text-indigo-300 disabled:bg-slate-800 disabled:text-slate-500 rounded border border-indigo-500/30 transition shadow-sm cursor-pointer"
+                                    className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1 bg-indigo-500/10 hover:bg-indigo-600 hover:text-white text-indigo-300 disabled:bg-slate-800 disabled:text-slate-500 rounded-md border border-indigo-500/30 transition shadow-sm cursor-pointer active:scale-95"
                                   >
                                     {isRefactoring && isShowingRefactorRow ? (
                                       <RefreshCw className="h-2.5 w-2.5 animate-spin" />
                                     ) : (
-                                      <Sparkles className="h-2.5 w-2.5 text-indigo-400 group-hover:text-white" />
+                                      <Sparkles className="h-2.5 w-2.5 text-indigo-400" />
                                     )}
-                                    <span>{isShowingRefactorRow ? 'Refactoring...' : '✨ Fix Issue'}</span>
+                                    <span>{isShowingRefactorRow ? 'Refactoring...' : 'Fix Issue'}</span>
                                   </button>
                                 </div>
                               </div>
@@ -599,16 +759,30 @@ export default function Dashboard() {
                                     )}
 
                                     {refactorData && (
-                                      <div className="space-y-3">
-                                        {/* Phase 7B Unified Git-Style Diff Code Rendering Node */}
-                                        <div>
-                                          <span className="text-[9px] font-bold tracking-wider uppercase text-indigo-400 block mb-1">📦 Code Adjustment Trace (Visual Line Diff)</span>
-                                          {renderVisualLineDiff(issue.snippet, refactorData.refactoredCode)}
+                                      <div className="space-y-4 mt-3 animate-fadeIn">
+                                        {/* Header Title with Interactive Utilities */}
+                                        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                                          <span className="text-[10px] font-bold tracking-wider uppercase text-indigo-400 flex items-center gap-1.5">
+                                            📦 Code Adjustment Trace (Visual Line Diff)
+                                          </span>
+                                          <button
+                                            onClick={() => navigator.clipboard.writeText(refactorData.refactoredCode)}
+                                            className="flex items-center gap-1 px-2 py-0.5 bg-slate-900 border border-slate-800 hover:border-indigo-500/40 text-[10px] text-slate-400 hover:text-slate-200 font-mono rounded-md transition active:scale-95 cursor-pointer"
+                                          >
+                                            📋 Copy Fix Code
+                                          </button>
                                         </div>
+                                        {/* Unified Git-Style Diff Component Rendering */}
+                                        {renderVisualLineDiff(issue.snippet, refactorData.refactoredCode)}
                                         
-                                        <div className="bg-indigo-950/20 border border-indigo-500/10 p-3.5 rounded-lg">
-                                          <h5 className="text-[10px] font-bold tracking-wider uppercase text-indigo-400 mb-1">Refactoring Engineering Rationale:</h5>
-                                          <p className="text-xs text-slate-300 leading-relaxed font-normal">{refactorData.explanation}</p>
+                                        {/* Fading Engineering Rationale Block */}
+                                        <div className="bg-indigo-950/20 border border-indigo-500/10 p-4 rounded-xl shadow-inner space-y-1.5 transition-all duration-300">
+                                          <h5 className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 flex items-center gap-1.5">
+                                            💡 Refactoring Engineering Rationale
+                                          </h5>
+                                          <p className="text-xs text-slate-300 leading-relaxed font-normal">
+                                            {refactorData.explanation}
+                                          </p>
                                         </div>
                                       </div>
                                     )}
