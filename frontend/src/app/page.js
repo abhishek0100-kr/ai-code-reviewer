@@ -486,7 +486,7 @@ export default function Dashboard() {
 
                         <div className="pt-1 text-[10px] text-slate-500 font-mono flex items-center gap-1.5">
                           <CheckCircle className="h-3 w-3 text-emerald-500" />
-                          <span>Workspace verified against parsing definitions.</span>
+                          <span>Repository analysis completed.</span>
                         </div>
                       </div>
                     )}
