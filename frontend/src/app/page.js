@@ -337,47 +337,53 @@ export default function Dashboard() {
                 return (
                   <div
                     key={item.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => loadHistoricalRecord(item)}
-                    className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-3.5 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/80 transition duration-200 group text-left space-y-2.5"
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && loadHistoricalRecord(item)}
+                    className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4 cursor-pointer hover:border-indigo-500/30 hover:bg-slate-900/80 hover:-translate-y-0.5 transition-all duration-200 group text-left space-y-3 shadow-sm"
                   >
-                    {/* Top Metric Header Tier */}
+                    {/* Top Header Row Layout */}
                     <div className="flex items-center justify-between">
                       <span className={`text-[9px] font-mono tracking-wider font-bold px-2 py-0.5 rounded-md border ${
-                        isRepoMode 
-                          ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20' 
+                        isRepoMode
+                          ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20'
                           : 'bg-slate-800 text-slate-300 border-slate-700'
                       }`}>
-                        {isRepoMode ? '📁 REPO MODE' : '📝 SNIPPET'}
+                        {isRepoMode ? '📁 REPO' : '📝 SNIPPET'}
                       </span>
                       <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1 font-mono">
                         <Clock className="h-2.5 w-2.5 text-slate-600" />
                         {new Date(item.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </span>
                     </div>
-                    {/* Main Targeted Context Link Node */}
-                    <div>
-                      <p className="text-xs font-mono font-bold text-slate-200 group-hover:text-indigo-400 transition truncate">
-                        {isRepoMode ? item.sourceCode.replace('https://github.com/', '🔗 ') : 'Isolated Source Code Run'}
+
+                    {/* Main Data Layer: Identifiers & Large Floating Score */}
+                    <div className="flex items-center justify-between gap-3 pt-0.5">
+                      <p className="text-xs font-mono font-bold text-slate-200 group-hover:text-indigo-400 transition truncate min-w-0 flex-1">
+                        {isRepoMode ? item.sourceCode.replace('https://github.com/', '') : 'Isolated Source Run'}
                       </p>
-                      
-                      {/* Sub-Context Telemetry Row */}
-                      <div className="text-[10px] font-mono text-slate-400 mt-1.5 flex items-center gap-2">
-                        {isRepoMode ? (
-                          <span className="text-indigo-300 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20 font-semibold">
-                            🎯 {item.timeComplexity.replace('Score: ', '')}
+                      {isRepoMode ? (
+                        <div className="shrink-0 px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-center">
+                          <span className="block text-[9px] font-sans font-black text-indigo-400/80 tracking-widest uppercase">HEALTH</span>
+                          <span className="text-sm font-mono font-black text-indigo-300 leading-none">
+                            {item.timeComplexity ? item.timeComplexity.replace('Score: ', '') : 'N/A'}
                           </span>
-                        ) : (
-                          <span className="text-cyan-300 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">
-                            📊 {item.timeComplexity} | {item.spaceComplexity}
-                          </span>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <span className="shrink-0 text-[10px] font-mono text-cyan-300 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20 whitespace-nowrap">
+                          {item.timeComplexity} | {item.spaceComplexity}
+                        </span>
+                      )}
                     </div>
-                    {/* Bottom Quantitative Counter Badge */}
+
+                    {/* Explicit Flag Footnote Status */}
                     <div className="pt-2 border-t border-slate-800/40 flex items-center justify-between text-[10px] text-slate-500 font-mono">
                       <span>Issues Captured:</span>
-                      <span className={`font-bold font-mono px-1.5 rounded ${
-                        item.issuesCount > 0 ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20' : 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                      <span className={`font-bold font-mono px-2 py-0.5 rounded-md border ${
+                        item.issuesCount > 0
+                          ? 'text-rose-400 bg-rose-500/5 border-rose-500/10'
+                          : 'text-emerald-400 bg-emerald-500/5 border-emerald-500/10'
                       }`}>
                         {item.issuesCount} flags
                       </span>
@@ -399,33 +405,91 @@ export default function Dashboard() {
               <button
                 onClick={executeReviewPayload}
                 disabled={isProcessing}
-                className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-medium rounded-lg transition-all shadow-md active:scale-95 cursor-pointer"
+                className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] disabled:bg-slate-800 disabled:text-slate-500 text-xs font-bold rounded-lg shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all duration-200 cursor-pointer"
               >
                 {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                {isProcessing ? 'Mapping System Context...' : 'Run Diagnostics'}
+                <span>{isProcessing ? 'Mapping System Context...' : 'Run Diagnostics'}</span>
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-auto bg-slate-950 p-4 flex flex-col justify-start" data-color-mode="dark">
               {isCurrentRepo ? (
-                <div className="space-y-4 my-auto max-w-md mx-auto w-full p-6 bg-slate-900/50 rounded-2xl border border-slate-800 shadow-xl">
-                  <div className="h-12 w-12 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center mb-1">
-                    <GitBranch className="h-6 w-6 text-indigo-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-md font-bold text-slate-200">Audit Entire Project Repositories</h3>
-                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">Provide a public GitHub codebase URL link node. Our static ingestion system parses your directory tree and runs macro security audits across code dependencies.</p>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Public Git URL Target</label>
+                <div className="w-full space-y-4">
+                  {/* Fixed Control Bar Section */}
+                  <div className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                      Public Git URL Target
+                    </label>
                     <input
                       type="text"
                       value={repoUrl}
                       disabled={isProcessing}
                       onChange={(e) => setRepoUrl(e.target.value)}
-                      className="w-full bg-slate-950 text-slate-100 font-mono text-xs px-4 py-3 rounded-lg border border-slate-800 focus:outline-none focus:border-indigo-500 disabled:text-slate-600 transition"
+                      className="w-full bg-slate-950 text-slate-100 font-mono text-xs px-4 py-3 rounded-lg border border-slate-800 focus:outline-none focus:border-indigo-500 transition"
                       placeholder="https://github.com/username/repository"
                     />
+                  </div>
+
+                  {/* Dynamic Workspace Section */}
+                  <div className="flex-1 flex flex-col justify-center">
+                    {/* State A: Idle (No analysis has run yet) */}
+                    {!analysis && !isProcessing && (
+                      <div className="p-4 bg-slate-900/40 rounded-xl border border-slate-800/60 text-center space-y-3">
+                        <div className="h-10 w-10 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center mx-auto">
+                          <GitBranch className="h-5 w-5 text-indigo-400" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-bold text-slate-200">Audit Entire Project Repositories</h4>
+                          <p className="text-xs text-slate-400 leading-relaxed">
+                            Provide a public repository URL link above. Our static ingestion pipeline parses your directory tree and runs macro security audits across code dependencies.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* State B: Loading (Analysis is running on the right) */}
+                    {isProcessing && (
+                      <div className="p-4 bg-slate-900/20 rounded-xl border border-slate-800/40 text-center space-y-2">
+                        <p className="text-xs font-mono text-indigo-400 animate-pulse">
+                          ▶ System analysis engine engaged...
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          Review deep telemetry stream metrics inside the right panel workspace.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* State C: Completed (Display current repository context) */}
+                    {analysis && !isProcessing && (
+                      <div className="p-4 bg-slate-900/60 rounded-xl border border-slate-800/80 space-y-3">
+                        <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+                          <span className="text-[10px] font-mono tracking-wider font-bold px-1.5 py-0.5 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded">
+                            ACTIVE CONTEXT
+                          </span>
+                          <span className="text-xs font-mono font-bold text-slate-200 truncate">
+                            {repoUrl.replace('https://github.com/', '')}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                          <div className="bg-slate-950 p-2 rounded border border-slate-900">
+                            <span className="text-slate-500 block text-[9px] uppercase font-sans font-bold tracking-wider">Language Runtime</span>
+                            <span className="text-slate-300 font-bold uppercase">{analysis.language || 'Multi-stack'}</span>
+                          </div>
+                          <div className="bg-slate-950 p-2 rounded border border-slate-900">
+                            <span className="text-slate-500 block text-[9px] uppercase font-sans font-bold tracking-wider">Captured Flags</span>
+                            <span className={`font-bold ${analysis.issues?.length > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              {analysis.issues?.length || 0} issues
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pt-1 text-[10px] text-slate-500 font-mono flex items-center gap-1.5">
+                          <CheckCircle className="h-3 w-3 text-emerald-500" />
+                          <span>Workspace verified against parsing definitions.</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -704,8 +768,14 @@ export default function Dashboard() {
                             ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                             : 'bg-sky-500/10 text-sky-400 border-sky-500/20';
 
+                          const accentBorderClass = isSecurity
+                            ? 'border-l-2 border-l-rose-500/70 hover:border-l-rose-400'
+                            : isOptimization
+                              ? 'border-l-2 border-l-amber-500/70 hover:border-l-amber-400'
+                              : 'border-l-2 border-l-sky-500/70 hover:border-l-sky-400';
+
                           return (
-                            <div key={index} className={`bg-slate-950/60 rounded-xl border border-slate-800 overflow-hidden shadow-md hover:border-slate-700/80 transition duration-200`}>
+                            <div key={index} className={`bg-slate-950/60 rounded-xl border border-slate-800 overflow-hidden shadow-md hover:bg-slate-950/80 hover:border-slate-700/60 ${accentBorderClass} transition-all duration-200`}>
                               {/* Premium Header Bar Interface */}
                               <div className="px-4 py-3 bg-slate-950/90 border-b border-slate-800 flex justify-between items-center flex-wrap gap-3">
                                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border ${themeClass}`}>
