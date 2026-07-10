@@ -72,7 +72,15 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Password Security Key</label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Password Security Key</label>
+              <Link 
+                href="/forgot-password" 
+                className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline transition font-medium"
+              >
+                Forgot Password?
+              </Link>
+            </div>
             <input
               type="password"
               required
@@ -86,14 +94,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-semibold rounded-xl transition shadow-md active:scale-95"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-semibold rounded-xl transition shadow-md active:scale-95 cursor-pointer"
           >
             {isSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
             {isSubmitting ? 'Verifying Session...' : 'Authenticate Account'}
           </button>
         </form>
 
-        <div className="text-center">
+        <div className="text-center pt-2 border-t border-slate-800/40">
           <p className="text-xs text-slate-500">
             Don't have an active user account?{' '}
             <Link href="/register" className="text-indigo-400 hover:underline font-medium">
